@@ -1,5 +1,8 @@
 //import { QMainWindow, QWidget, QLabel, FlexLayout, QPushButton, QIcon } from '@nodegui/nodegui';
 import logo from '../assets/logox200.png';
+import {exec} from 'child_process';
+import WebSocket from 'ws';
+import dotenv from 'dotenv';
 
 // const win = new QMainWindow();
 // win.setWindowTitle("Hello World");
