@@ -47,6 +47,8 @@ import dotenv from 'dotenv';
 // win.show();
 
 // (global as any).win = win;
+
+
 import { QMessageBox, ButtonRole, QPushButton, WindowState } from '@nodegui/nodegui';
 const messageBox = new QMessageBox();
 messageBox.setText('John has invited you to the McGarvey Family Zoom meeting.')
@@ -67,6 +69,27 @@ sureBox.setWindowTitle("McGarvey Family Zoom");
 sureBox.setText("Are you sure you want to cancel and not start Zoom?");
 sureBox.addButton(yesButton,ButtonRole.AcceptRole);
 sureBox.addButton(noButton,ButtonRole.RejectRole);
+dotenv.config();
+declare var process : {
+  env: {
+    CONNECT_URL: string
+  }
+}
+let ws = new WebSocket(process.env.CONNECT_URL);
+let isAlive=true;
+setInterval(()=> { 
+  if (!isAlive) {
+    //ws.terminate()
+    // ws = new WebSocket(process.env.CONNECT_URL);
+  } else {
+    isAlive=false;
+    ws.ping()
+  }
+},30000)
+ws.on('pong',()=> {
+  isAlive=true;
+})
+
 
 let decision;
 do {
