@@ -51,13 +51,16 @@ import dotenv from 'dotenv';
 
 import { QMessageBox, ButtonRole, QPushButton, WindowState } from '@nodegui/nodegui';
 const messageBox = new QMessageBox();
+//console.log("messageBox", messageBox);
+
 messageBox.setText('John has invited you to the McGarvey Family Zoom meeting.')
 const zoomButton = new QPushButton();
 const cancelButton = new QPushButton();
 zoomButton.setText('Start the Zoom Meeting');
+//zoomButton.setText('a');
 cancelButton.setText('Cancel');
-messageBox.addButton(cancelButton,ButtonRole.RejectRole);
-messageBox.addButton(zoomButton,ButtonRole.AcceptRole);
+messageBox.addButton(cancelButton,ButtonRole.AcceptRole);
+messageBox.addButton(zoomButton,ButtonRole.RejectRole);
 
 messageBox.setWindowTitle("McGarvey Family Zoom");
 const sureBox = new QMessageBox();
@@ -75,35 +78,62 @@ declare var process : {
     CONNECT_URL: string
   }
 }
-let ws = new WebSocket(process.env.CONNECT_URL);
+let client = new WebSocket(process.env.CONNECT_URL);
+// console.log("line 79, client is", client)
 let isAlive=true;
+client.on('open', ()=>{
+  console.log("here")
 setInterval(()=> { 
   if (!isAlive) {
     //ws.terminate()
     // ws = new WebSocket(process.env.CONNECT_URL);
   } else {
     isAlive=false;
-    ws.ping()
+    client.ping()
   }
 },30000)
-ws.on('pong',()=> {
+})
+client.on('pong',()=> {
   isAlive=true;
 })
-
+client.on('error',e => console.log(e))
+client.on('message',(data) => {
+  console.log(data.toString())
+  const sentData = data.toString();
+  const sentLines = sentData.split(/\r?\n/);
+  const invite = sentLines.find((line) => line.includes("inviting"))
+  if (invite && invite !== undefined) {
+    messageBox.setText(invite);
+    const zoomURL = sentLines.find((line) => line.includes('https://'))
+    const zoomValues = zoomURL?.split('/')
+    const meetingNumber = zoomValues?.pop()
+    console.log("meetingNumber",meetingNumber)
+  } 
+});
+// function listFunctionsInObject(obj) {
+//   const functions = [];
+//   for (const property in obj) {
+//     if (typeof obj[property] === 'function') {
+//       functions.push(property);
+//     }
+//   }
+//   return functions;
+// }
 
 let decision;
 do {
-  messageBox.setModal(true);
-  messageBox.setWindowState(WindowState.WindowActive);
-  //messageBox.setDefaultButton(zoomButton);
+  // console.log("messageBox functions", listFunctionsInObject(messageBox))
+  // messageBox.setDefaultButton(zoomButton);
+  // messageBox.setModal(true);
+  // messageBox.setWindowState(WindowState.WindowActive);
   decision = messageBox.exec();
   let sure;
   if (!decision) {
-    sureBox.setModal(true);
+    //sureBox.setModal(true);
     //sureBox.setDefaultButton(noButton);
     sure = sureBox.exec();
     console.log("sure: ", sure)
-    if (sure) {
+    if (!sure) {
         break;
     }
   } else {
